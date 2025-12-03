@@ -12,7 +12,15 @@ export async function runResearchStage(topic: string): Promise<ResearchData> {
     instructions: `
       Search YouTube for "${topic} #shorts". 
       Set parameters: type='video', duration='short', order='viewCount'.
-      Return ONLY a JSON list of objects: { "title": string, "url": string, "videoId": string }.
+      
+      CRITICAL OUTPUT INSTRUCTIONS:
+      1. Return ONLY a valid JSON array.
+      2. Do NOT include markdown formatting (like \`\`\`json).
+      3. Do NOT include any conversational text.
+      4. The JSON must be a list of objects with this exact schema:
+         [
+           { "title": "string", "url": "string", "videoId": "string" }
+         ]
     `,
     tools: [
       hostedMcpTool({ serverLabel: "tool_router", serverUrl: ytSession.url }),
@@ -27,31 +35,49 @@ export async function runResearchStage(topic: string): Promise<ResearchData> {
   let videos: VideoReference[] = [];
   if (ytResult.finalOutput) {
     try {
-      videos = JSON.parse(
-        ytResult.finalOutput.replace(/```json|```/g, "").trim()
-      );
+      // Remove potential markdown code blocks and whitespace
+      const cleanJson = ytResult.finalOutput.replace(/```json|```/g, "").trim();
+      videos = JSON.parse(cleanJson);
+      console.log(`✅ Found ${videos.length} videos`);
     } catch (e) {
-      console.warn("⚠️ YouTube JSON parse failed");
+      console.error("⚠️ YouTube JSON parse failed. Raw output:", ytResult.finalOutput);
+      // Fallback: Try to find a JSON array in the text if strict parsing failed
+      const match = ytResult.finalOutput.match(/\[.*\]/s);
+      if (match) {
+        try {
+          videos = JSON.parse(match[0]);
+          console.log(`✅ Recovered ${videos.length} videos from raw text`);
+        } catch (e2) {
+           console.error("⚠️ Recovery failed too.");
+        }
+      }
     }
   }
 
-  // 2. APIFY SCRAPING (Get Transcripts)
+  // ------------------------------------------------------------------
+  // 2. APIFY STAGE (UPDATED TO USE THE TRANSCRIBER ACTOR)
+  // ------------------------------------------------------------------
   let rawTranscripts = "No transcripts found.";
+
   if (videos.length > 0) {
-    const apifySession = await createToolkitSession(COMPOSIO_USER_ID, [
-      "apify",
-    ]);
-    const targetUrls = videos.slice(0, 3).map((v) => v.url); // Top 3 only
+    const apifySession = await createToolkitSession(COMPOSIO_USER_ID, ["apify"]);
+    const topVideos = videos.slice(0, 3).map((v) => v.url);
 
     const scrapeAgent = new Agent({
-      name: "Scraper",
+      name: "Transcriber",
       instructions: `
-        You are an Apify Expert.
-        1. Use tool 'APIFY_RUN_ACTOR_SYNC'.
-        2. CRITICAL: Use actorId: 'h7sMNwOPOK6fTSQI' (YouTube Scraper).
-        3. Input 'startUrls': ${JSON.stringify(targetUrls)}.
-        4. Input 'downloadSubtitles': true.
-        5. Return a summary of the transcripts.
+        You are an Apify expert.
+        For EACH video URL, call the tool:
+        APIFY_RUN_ACTOR_SYNC_GET_DATASET_ITEMS
+
+        Use the actor:
+        - actorId: "tictechid~anoxvanzi-Transcriber"
+
+        For each run, pass:
+        { "start_urls": "<single video URL>" }
+
+        Wait for each run to finish, read the dataset items (transcript),
+        and produce a final combined transcript summary for all 3 videos.
       `,
       tools: [
         hostedMcpTool({
@@ -62,8 +88,12 @@ export async function runResearchStage(topic: string): Promise<ResearchData> {
       model: "gpt-4o",
     });
 
-    console.log("🕷️ Scraping transcripts (using specific Actor)...");
-    const scrapeResult = await run(scrapeAgent, "Extract transcripts now.");
+    console.log("🕷️ Transcribing top 3 shorts using Apify Transcriber Actor...");
+    const scrapeResult = await run(
+      scrapeAgent,
+      `Transcribe the following video URLs: ${JSON.stringify(topVideos)}`
+    );
+
     rawTranscripts = scrapeResult.finalOutput ?? rawTranscripts;
   }
 
@@ -71,7 +101,7 @@ export async function runResearchStage(topic: string): Promise<ResearchData> {
   const exaSession = await createToolkitSession(COMPOSIO_USER_ID, ["exa"]);
   const dateStr = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000)
     .toISOString()
-    .split("T")[0]; // 30 Days ago
+    .split("T")[0];
 
   const trendAgent = new Agent({
     name: "Trend Researcher",
