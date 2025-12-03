@@ -11,6 +11,7 @@
   "license": "ISC",
   "description": "",
   "devDependencies": {
+    "@types/inquirer": "^9.0.9",
     "@types/node": "^24.10.1",
     "ts-node": "^10.9.2",
     "tsx": "^4.21.0",
@@ -20,6 +21,7 @@
     "@composio/core": "^0.2.6",
     "@openai/agents": "^0.3.3",
     "dotenv": "^17.2.3",
+    "inquirer": "^13.0.2",
     "openai": "^6.9.1"
   }
 }

@@ -1,18 +1,22 @@
 export interface VideoReference {
   title: string;
   url: string;
-  videoId: string; // Added for Apify Actor
+  videoId: string;
   viewCount?: string;
 }
 
 export interface ResearchData {
   videos: VideoReference[];
-  rawTranscripts: string; // The "Secret Sauce" from Apify
-  trends: string; // The "Fresh News" from Exa
+  rawTranscripts: string;
+  trends: string;
 }
 
 export interface AgentState {
   topic: string;
-  researchData?: ResearchData;
-  script?: string;
+  researchData?: ResearchData | undefined;
+  script?: string | undefined;
+  // NEW: Store feedback for regeneration
+  // FIX: Added "| undefined" here. 
+  // This allows you to do: state.feedback = undefined
+  feedback?: string | undefined; 
 }
