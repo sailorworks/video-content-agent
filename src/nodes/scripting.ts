@@ -1,33 +1,31 @@
-// src/nodes/scripting.ts
 import { Agent, run } from "@openai/agents";
+import type { ResearchData } from "../graph/state.js";
 
-/**
- * STAGE 2: Generate the script from research data.
- */
-export async function runScriptingStage(researchData: any) {
+export async function runScriptingStage(data: ResearchData) {
   console.log("\n--- STAGE 2: WRITING SCRIPT ---");
 
-  const scriptAgent = new Agent({
-    name: "Creative Director",
-    instructions: "You are an expert video scriptwriter.",
-    model: "gpt-4o", // We use the big model here for quality
+  const agent = new Agent({
+    name: "Viral Scriptwriter",
+    instructions: "You are an expert scriptwriter.",
+    model: "gpt-4o",
   });
 
   const prompt = `
-    Based on this research data:
-    ${JSON.stringify(researchData)}
+    VIRAL PACING (From YouTube Transcripts):
+    ${data.rawTranscripts}
 
-    Write a 30-second viral video script.
-    - Hook (0-5s)
-    - Value (5-25s)
+    NEW ANGLES (From Exa Trends):
+    ${data.trends}
+
+    TASK:
+    Write a 30-second script that uses the *pacing* of the viral transcripts but the *facts* from the new trends.
+    
+    OUTPUT:
+    - HOOK (0-3s)
+    - BODY (3-25s)
     - CTA (25-30s)
-
-    Output ONLY the spoken words (Voiceover). No scene directions.
   `;
 
-  console.log("✍️ Writing script...");
-  const result = await run(scriptAgent, prompt);
-
-  console.log("✅ Script Written!");
+  const result = await run(agent, prompt);
   return result.finalOutput;
 }

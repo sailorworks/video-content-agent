@@ -1,25 +1,18 @@
-// src/graph/state.ts
-
 export interface VideoReference {
   title: string;
   url: string;
-  transcriptSnippet?: string; // What Apify extracts
+  videoId: string; // Added for Apify Actor
   viewCount?: string;
 }
 
-export interface TrendArticle {
-  title: string;
-  url: string;
-  summary: string; // What Exa finds
+export interface ResearchData {
+  videos: VideoReference[];
+  rawTranscripts: string; // The "Secret Sauce" from Apify
+  trends: string; // The "Fresh News" from Exa
 }
 
 export interface AgentState {
   topic: string;
-  researchData?: {
-    videos: VideoReference[];
-    trends: TrendArticle[];
-    rawOutput: string; // Full LLM synthesis
-  };
-  // Future fields for next steps
+  researchData?: ResearchData;
   script?: string;
 }
