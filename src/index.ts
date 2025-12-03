@@ -1,7 +1,9 @@
+// src/index.ts
 import dotenv from "dotenv";
 import { runResearchStage } from "./nodes/research.js";
 import { runScriptingStage } from "./nodes/scripting.js";
 import { runHumanReviewNode } from "./nodes/human_review.js";
+import { runAudioStage } from "./nodes/audio.js"; // <--- IMPORT ADDED
 import type { AgentState } from "./graph/state.js";
 
 dotenv.config();
@@ -9,18 +11,17 @@ dotenv.config();
 async function main() {
   const TOPIC = "AI Agents in 2025";
 
-  // FIX: Initialize without declaring undefined properties to satisfy strict mode
   let state: AgentState = {
     topic: TOPIC,
   };
 
   try {
-    // Stage 1: Research
+    // --- Stage 1: Research ---
     const researchData = await runResearchStage(TOPIC);
     state.researchData = researchData;
     console.log("📊 Research Data collected.");
 
-    // Stage 2: Scripting Loop
+    // --- Stage 2: Scripting Loop ---
     let scriptApproved = false;
 
     while (!scriptApproved) {
@@ -33,18 +34,21 @@ async function main() {
       if (reviewResult.approved) {
         console.log("✅ Script Approved!");
         scriptApproved = true;
-        // Optional: clear feedback
-        state.feedback = undefined; 
+        state.feedback = undefined;
       } else {
         console.log("🔄 Feedback received:", reviewResult.feedback);
-        // FIX: This now works because we updated AgentState to accept 'string | undefined'
         state.feedback = reviewResult.feedback;
       }
     }
 
-    // Stage 3...
-    console.log("\n🎬 FINAL SCRIPT READY FOR PRODUCTION");
+    // --- Stage 3: Audio Generation (NEW) ---
+    if (state.script) {
+      const audioResult = await runAudioStage(state.script);
+      console.log("🎧 Audio Generated successfully!");
+      console.log("📂 File Location:", audioResult);
+    }
 
+    console.log("\n🎬 FINAL PRODUCTION READY");
   } catch (error) {
     console.error("❌ Pipeline Failed:", error);
   }

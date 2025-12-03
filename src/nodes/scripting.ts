@@ -4,7 +4,7 @@ import type { AgentState } from "../graph/state.js";
 
 export async function runScriptingStage(state: AgentState) {
   console.log("\n--- STAGE 2: WRITING SCRIPT ---");
-  
+
   // Ensure we have research data
   if (!state.researchData) {
     throw new Error("Research data is missing!");
@@ -12,7 +12,8 @@ export async function runScriptingStage(state: AgentState) {
 
   const agent = new Agent({
     name: "Viral Scriptwriter",
-    instructions: "You are an expert scriptwriter for short-form viral content.",
+    instructions:
+      "You are an expert scriptwriter for short-form viral content.",
     model: "gpt-4o",
   });
 
@@ -30,7 +31,7 @@ export async function runScriptingStage(state: AgentState) {
   // CHECK: Is this a regeneration?
   if (state.feedback) {
     console.log(`\n⚠️ REGENERATING WITH FEEDBACK: "${state.feedback}"`);
-    
+
     taskInstruction = `
       TASK:
       The previous script was rejected. 
@@ -55,9 +56,7 @@ export async function runScriptingStage(state: AgentState) {
     ${taskInstruction}
     
     OUTPUT FORMAT:
-    - HOOK (0-3s)
-    - BODY (3-25s)
-    - CTA (25-30s)
+Return ONLY the spoken text as a single paragraph. Do not include labels, headers, timestamps, or markdown.
   `;
 
   const result = await run(agent, fullPrompt);
