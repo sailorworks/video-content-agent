@@ -16,7 +16,8 @@ export interface AgentState {
   researchData?: ResearchData | undefined;
   script?: string | undefined;
   // NEW: Store feedback for regeneration
-  // FIX: Added "| undefined" here. 
+  // FIX: Added "| undefined" here.
   // This allows you to do: state.feedback = undefined
-  feedback?: string | undefined; 
+  feedback?: string | undefined;
+  audioUrl?: string | undefined; // <--- Add this
 }

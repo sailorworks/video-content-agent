@@ -3,7 +3,8 @@ import dotenv from "dotenv";
 import { runResearchStage } from "./nodes/research.js";
 import { runScriptingStage } from "./nodes/scripting.js";
 import { runHumanReviewNode } from "./nodes/human_review.js";
-import { runAudioStage } from "./nodes/audio.js"; // <--- IMPORT ADDED
+import { runAudioStage } from "./nodes/audio.js";
+import { runVideoGenerationStage } from "./nodes/video_generation.js";
 import type { AgentState } from "./graph/state.js";
 
 dotenv.config();
@@ -11,17 +12,22 @@ dotenv.config();
 async function main() {
   const TOPIC = "AI Agents in 2025";
 
+  // Initialize State
   let state: AgentState = {
     topic: TOPIC,
   };
 
   try {
-    // --- Stage 1: Research ---
+    // ----------------------------------------------------------------
+    // --- STAGE 1: Research ---
+    // ----------------------------------------------------------------
     const researchData = await runResearchStage(TOPIC);
     state.researchData = researchData;
     console.log("📊 Research Data collected.");
 
-    // --- Stage 2: Scripting Loop ---
+    // ----------------------------------------------------------------
+    // --- STAGE 2: Scripting (Loop with Human Review) ---
+    // ----------------------------------------------------------------
     let scriptApproved = false;
 
     while (!scriptApproved) {
@@ -41,14 +47,29 @@ async function main() {
       }
     }
 
-    // --- Stage 3: Audio Generation (NEW) ---
+    // ----------------------------------------------------------------
+    // --- STAGE 3: Audio Generation ---
+    // ----------------------------------------------------------------
     if (state.script) {
-      const audioResult = await runAudioStage(state.script);
-      console.log("🎧 Audio Generated successfully!");
-      console.log("📂 File Location:", audioResult);
+      // Logic: Generate audio and save to state
+      state.audioUrl = await runAudioStage(state.script);
+      console.log("🎧 Audio generated:", state.audioUrl);
+    } else {
+      console.warn("⚠️ No script available for audio generation.");
     }
 
-    console.log("\n🎬 FINAL PRODUCTION READY");
+    // ----------------------------------------------------------------
+    // --- STAGE 4: Video Generation (HeyGen) ---
+    // ----------------------------------------------------------------
+    if (state.audioUrl) {
+      console.log("🎬 Starting Video Generation...");
+      const videoLink = await runVideoGenerationStage(state.audioUrl);
+      console.log("\n=================================");
+      console.log("🚀 FINAL VIDEO READY:", videoLink);
+      console.log("=================================\n");
+    } else {
+      console.log("⚠️ Skipping video generation: No audio URL provided.");
+    }
   } catch (error) {
     console.error("❌ Pipeline Failed:", error);
   }

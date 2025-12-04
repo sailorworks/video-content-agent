@@ -23,9 +23,12 @@ export async function runAudioStage(scriptText: string) {
       - Voice ID: "EIsgvJT3rwoPvRFG6c4n"
       - Model ID: "eleven_multilingual_v2"
       
-      OUTPUT:
-      - Execute the tool.
-      - Return the location/path of the generated audio file provided by the tool output.
+      CRITICAL OUTPUT RULES:
+      1. Execute the tool.
+      2. The tool will provide a URL for the generated audio.
+      3. Your Final Output must be **ONLY the raw URL string**.
+      4. Do NOT use Markdown formatting (e.g. no [Link](url)).
+      5. Do NOT include conversational text (e.g. no "Here is the audio").
     `,
     tools: [
       hostedMcpTool({
@@ -46,5 +49,18 @@ export async function runAudioStage(scriptText: string) {
     `Generate audio for this script: \n"${scriptText}"`
   );
 
-  return result.finalOutput;
+  const rawOutput = result.finalOutput ?? "";
+
+  // 4. Safety Extraction (Fallback)
+  // Even with strict instructions, sometimes LLMs add text.
+  // This regex grabs the first https URL found in the response.
+  const urlMatch = rawOutput.match(/https?:\/\/[^\s\)]+/);
+
+  if (urlMatch) {
+    // Return just the clean URL
+    return urlMatch[0];
+  }
+
+  // If no URL pattern found, return raw (will likely fail next stage, but helpful for debugging)
+  return rawOutput;
 }
