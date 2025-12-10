@@ -9,6 +9,7 @@ export interface ResearchData {
   videos: VideoReference[];
   rawTranscripts: string;
   trends: string;
+  twitterInsights?: any[];
 }
 
 export interface AgentState {

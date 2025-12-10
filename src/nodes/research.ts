@@ -5,22 +5,24 @@ import type { ResearchData, VideoReference } from "../graph/state.js";
 export async function runResearchStage(topic: string): Promise<ResearchData> {
   console.log(`\n--- STAGE 1: RESEARCHING "${topic}" ---`);
 
+  // -------------------------------------------------------------
   // 1. YOUTUBE DISCOVERY (Find Viral Shorts)
+  // -------------------------------------------------------------
   const ytSession = await createToolkitSession(COMPOSIO_USER_ID, ["youtube"]);
   const ytAgent = new Agent({
     name: "YouTube Scout",
     instructions: `
       Search YouTube for "${topic} #shorts". 
       Set parameters: type='video', duration='short', order='viewCount'.
-      
+
       CRITICAL OUTPUT INSTRUCTIONS:
       1. Return ONLY a valid JSON array.
-      2. Do NOT include markdown formatting (like \`\`\`json).
-      3. Do NOT include any conversational text.
-      4. The JSON must be a list of objects with this exact schema:
-         [
-           { "title": "string", "url": "string", "videoId": "string" }
-         ]
+      2. Do NOT include markdown formatting.
+      3. Do NOT include conversational text.
+      4. Schema must be:
+        [
+          { "title": "string", "url": "string", "videoId": "string" }
+        ]
     `,
     tools: [
       hostedMcpTool({ serverLabel: "tool_router", serverUrl: ytSession.url }),
@@ -35,69 +37,29 @@ export async function runResearchStage(topic: string): Promise<ResearchData> {
   let videos: VideoReference[] = [];
   if (ytResult.finalOutput) {
     try {
-      // Remove potential markdown code blocks and whitespace
       const cleanJson = ytResult.finalOutput.replace(/```json|```/g, "").trim();
       videos = JSON.parse(cleanJson);
       console.log(`✅ Found ${videos.length} videos`);
     } catch (e) {
-      console.error("⚠️ YouTube JSON parse failed. Raw output:", ytResult.finalOutput);
-      // Fallback: Try to find a JSON array in the text if strict parsing failed
+      console.error("⚠️ YouTube JSON parse failed:", ytResult.finalOutput);
       const match = ytResult.finalOutput.match(/\[.*\]/s);
       if (match) {
         try {
           videos = JSON.parse(match[0]);
-          console.log(`✅ Recovered ${videos.length} videos from raw text`);
-        } catch (e2) {
-           console.error("⚠️ Recovery failed too.");
-        }
+          console.log(`✅ Recovered ${videos.length} videos from fallback`);
+        } catch {}
       }
     }
   }
 
-  // ------------------------------------------------------------------
-  // 2. APIFY STAGE (UPDATED TO USE THE TRANSCRIBER ACTOR)
-  // ------------------------------------------------------------------
-  let rawTranscripts = "No transcripts found.";
+  // -------------------------------------------------------------
+  // 2. APIFY STAGE (COMMENTED OUT)
+  // -------------------------------------------------------------
+  let rawTranscripts = "Transcription disabled (Apify commented out).";
 
-  if (videos.length > 0) {
-    const apifySession = await createToolkitSession(COMPOSIO_USER_ID, ["apify"]);
-    const topVideos = videos.slice(0, 3).map((v) => v.url);
-
-    const scrapeAgent = new Agent({
-      name: "Transcriber",
-      instructions: `
-        You are an Apify expert.
-        For EACH video URL, call the tool:
-        APIFY_RUN_ACTOR_SYNC_GET_DATASET_ITEMS
-
-        Use the actor:
-        - actorId: "tictechid~anoxvanzi-Transcriber"
-
-        For each run, pass:
-        { "start_urls": "<single video URL>" }
-
-        Wait for each run to finish, read the dataset items (transcript),
-        and produce a final combined transcript summary for all 3 videos.
-      `,
-      tools: [
-        hostedMcpTool({
-          serverLabel: "tool_router",
-          serverUrl: apifySession.url,
-        }),
-      ],
-      model: "gpt-4o",
-    });
-
-    console.log("🕷️ Transcribing top 3 shorts using Apify Transcriber Actor...");
-    const scrapeResult = await run(
-      scrapeAgent,
-      `Transcribe the following video URLs: ${JSON.stringify(topVideos)}`
-    );
-
-    rawTranscripts = scrapeResult.finalOutput ?? rawTranscripts;
-  }
-
-  // 3. EXA TRENDS (Get Fresh Data)
+  // -------------------------------------------------------------
+  // 3. EXA TRENDS (Fresh News)
+  // -------------------------------------------------------------
   const exaSession = await createToolkitSession(COMPOSIO_USER_ID, ["exa"]);
   const dateStr = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000)
     .toISOString()
@@ -106,9 +68,18 @@ export async function runResearchStage(topic: string): Promise<ResearchData> {
   const trendAgent = new Agent({
     name: "Trend Researcher",
     instructions: `
-      Use 'EXA_SEARCH' for "${topic}".
-      CRITICAL: Set 'startPublishedDate' to "${dateStr}".
-      Return a summary of the top 3 recent discussions.
+      ALWAYS call EXA_SEARCH with this EXACT JSON:
+      {
+        "query": "${topic}",
+        "numResults": 5,
+        "type": "neural",
+        "category": "news",
+        "startPublishedDate": "${dateStr}"
+      }
+
+      After receiving results:
+      - Summarize the top 3 most relevant recent discussions.
+      - Keep the output concise and factual.
     `,
     tools: [
       hostedMcpTool({ serverLabel: "tool_router", serverUrl: exaSession.url }),
@@ -119,9 +90,85 @@ export async function runResearchStage(topic: string): Promise<ResearchData> {
   console.log("📰 Finding trends (last 30 days)...");
   const trendResult = await run(trendAgent, "Find fresh news.");
 
+  // -------------------------------------------------------------
+  // 4. TWITTER DISCOVERY (Latest Viral Threads)
+  // -------------------------------------------------------------
+  const twitterSession = await createToolkitSession(COMPOSIO_USER_ID, [
+    "twitter",
+  ]);
+  const twitterAgent = new Agent({
+    name: "Twitter Scout",
+    instructions: `
+      Search Twitter for posts/threads about "${topic}".
+      
+      REQUIRED FILTERS:
+      - Only include tweets with:
+          • 1000+ likes
+          • 10+ comments
+          • High views/engagement
+
+      REQUIRED SEARCH FORMAT (assume toolkit matches this shape):
+      {
+        "query": "${topic}",
+        "result_type": "recent",
+        "limit": 10
+      }
+
+      CRITICAL OUTPUT INSTRUCTIONS:
+      - Return ONLY valid JSON.
+      - No markdown. No text.
+      - Schema must be:
+        [
+          {
+            "text": "string",
+            "url": "string",
+            "likes": number,
+            "comments": number,
+            "views": number
+          }
+        ]
+    `,
+    tools: [
+      hostedMcpTool({
+        serverLabel: "tool_router",
+        serverUrl: twitterSession.url,
+      }),
+    ],
+    model: "gpt-4o",
+  });
+
+  console.log("🐦 Fetching viral Twitter threads...");
+  const twitterResult = await run(twitterAgent, "Find viral threads.");
+
+  let twitterInsights: any[] = [];
+  if (twitterResult.finalOutput) {
+    try {
+      const cleanJson = twitterResult.finalOutput
+        .replace(/```json|```/g, "")
+        .trim();
+      twitterInsights = JSON.parse(cleanJson);
+      console.log(`✅ Twitter items: ${twitterInsights.length}`);
+    } catch (err) {
+      console.error("⚠️ Twitter JSON parse failed:", twitterResult.finalOutput);
+      const match = twitterResult.finalOutput.match(/\[.*\]/s);
+      if (match) {
+        try {
+          twitterInsights = JSON.parse(match[0]);
+          console.log(
+            `✅ Recovered ${twitterInsights.length} items from fallback`
+          );
+        } catch {}
+      }
+    }
+  }
+
+  // -------------------------------------------------------------
+  // RETURN COMBINED RESEARCH DATA
+  // -------------------------------------------------------------
   return {
     videos,
     rawTranscripts,
     trends: trendResult.finalOutput ?? "No trends found.",
+    twitterInsights,
   };
 }

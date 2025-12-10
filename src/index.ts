@@ -10,7 +10,7 @@ import type { AgentState } from "./graph/state.js";
 dotenv.config();
 
 async function main() {
-  const TOPIC = "AI Agents in 2025";
+  const TOPIC = "voice agents in 2025";
 
   // Initialize State
   let state: AgentState = {
