@@ -8,7 +8,11 @@ export async function runResearchStage(topic: string): Promise<ResearchData> {
   // -------------------------------------------------------------
   // 1. YOUTUBE DISCOVERY (Find Viral Shorts)
   // -------------------------------------------------------------
-  const ytSession = await createToolkitSession(COMPOSIO_USER_ID, ["youtube"]);
+  const ytSession = await createToolkitSession(
+    COMPOSIO_USER_ID,
+    ["youtube"],
+    process.env.YOUTUBE_AUTH_CONFIG_ID
+  );
   const ytAgent = new Agent({
     name: "YouTube Scout",
     instructions: `
@@ -60,7 +64,11 @@ export async function runResearchStage(topic: string): Promise<ResearchData> {
   // -------------------------------------------------------------
   // 3. EXA TRENDS (Fresh News)
   // -------------------------------------------------------------
-  const exaSession = await createToolkitSession(COMPOSIO_USER_ID, ["exa"]);
+  const exaSession = await createToolkitSession(
+    COMPOSIO_USER_ID,
+    ["exa"],
+    process.env.EXA_AUTH_CONFIG_ID
+  );
   const dateStr = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000)
     .toISOString()
     .split("T")[0];
@@ -93,9 +101,11 @@ export async function runResearchStage(topic: string): Promise<ResearchData> {
   // -------------------------------------------------------------
   // 4. TWITTER DISCOVERY (Latest Viral Threads)
   // -------------------------------------------------------------
-  const twitterSession = await createToolkitSession(COMPOSIO_USER_ID, [
-    "twitter",
-  ]);
+  const twitterSession = await createToolkitSession(
+    COMPOSIO_USER_ID,
+    ["twitter"],
+    process.env.TWITTER_AUTH_CONFIG_ID
+  );
   const twitterAgent = new Agent({
     name: "Twitter Scout",
     instructions: `

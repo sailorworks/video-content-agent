@@ -8,7 +8,10 @@ export async function runVideoGenerationStage(audioUrl: string) {
   console.log("\n--- STAGE 4: VIDEO GENERATION (HEYGEN) ---");
 
   // 1. Get Authentication
-  const connectionId = await getActiveConnectionId("HEYGEN");
+  const connectionId = await getActiveConnectionId(
+    "HEYGEN",
+    process.env.HEYGEN_AUTH_CONFIG_ID
+  );
   console.log("🔌 Using HeyGen Connection ID:", connectionId);
 
   // 2. Construct Payload

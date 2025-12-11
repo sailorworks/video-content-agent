@@ -6,9 +6,11 @@ export async function runAudioStage(scriptText: string) {
   console.log("\n--- STAGE 3: AUDIO GENERATION ---");
 
   // 1. Create Session for ElevenLabs
-  const voiceSession = await createToolkitSession(COMPOSIO_USER_ID, [
-    "elevenlabs",
-  ]);
+  const voiceSession = await createToolkitSession(
+    COMPOSIO_USER_ID,
+    ["elevenlabs"],
+    process.env.ELEVENLABAS_AUTH_CONFIG_ID
+  );
 
   // 2. Configure the Agent
   const agent = new Agent({
