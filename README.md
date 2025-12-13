@@ -5,6 +5,7 @@ An AI system that turns your idea into a ready-to-post viral short video. You gi
 ## 📺 Demo
 
 > **To display the demo video:** Upload `result.mp4` to GitHub and replace the placeholder URL below
+> demo vid try
 
 https://github.com/user-attachments/assets/your-video-id-here
 
