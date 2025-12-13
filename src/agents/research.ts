@@ -1,6 +1,6 @@
 import { Agent, hostedMcpTool, run } from "@openai/agents";
-import { createToolkitSession, COMPOSIO_USER_ID } from "../composio/client.js";
-import type { ResearchData, VideoReference } from "../graph/state.js";
+import { createToolkitSession, COMPOSIO_USER_ID } from "../services/client.js";
+import type { ResearchData, VideoReference } from "../state/state.js";
 
 export async function runResearchStage(topic: string): Promise<ResearchData> {
   console.log(`\n--- STAGE 1: RESEARCHING "${topic}" ---`);

@@ -1,11 +1,11 @@
 // src/index.ts
 import dotenv from "dotenv";
-import { runResearchStage } from "./nodes/research.js";
-import { runScriptingStage } from "./nodes/scripting.js";
-import { runHumanReviewNode } from "./nodes/human_review.js";
-import { runAudioStage } from "./nodes/audio.js";
-import { runVideoGenerationStage } from "./nodes/video_generation.js";
-import type { AgentState } from "./graph/state.js";
+import { runResearchStage } from "./src/agents/research.js";
+import { runScriptingStage } from "./src/agents/scripting.js";
+import { runHumanReviewNode } from "./src/agents/human_review.js";
+import { runAudioStage } from "./src/agents/audio.js";
+import { runVideoGenerationStage } from "./src/agents/video_generation.js";
+import type { AgentState } from "./src/state/state.js";
 
 dotenv.config();
 

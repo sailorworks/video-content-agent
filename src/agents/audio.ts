@@ -1,6 +1,6 @@
 // src/nodes/audio.ts
 import { Agent, hostedMcpTool, run } from "@openai/agents";
-import { createToolkitSession, COMPOSIO_USER_ID } from "../composio/client.js";
+import { createToolkitSession, COMPOSIO_USER_ID } from "../services/client.js";
 
 export async function runAudioStage(scriptText: string) {
   console.log("\n--- STAGE 3: AUDIO GENERATION ---");
@@ -9,7 +9,7 @@ export async function runAudioStage(scriptText: string) {
   const voiceSession = await createToolkitSession(
     COMPOSIO_USER_ID,
     ["elevenlabs"],
-    process.env.ELEVENLABAS_AUTH_CONFIG_ID
+    process.env.ELEVENLABS_AUTH_CONFIG_ID
   );
 
   // 2. Configure the Agent
@@ -59,6 +59,17 @@ export async function runAudioStage(scriptText: string) {
   const urlMatch = rawOutput.match(/https?:\/\/[^\s\)]+/);
 
   if (urlMatch) {
+    if (urlMatch[0].includes("connect.composio.dev")) {
+      console.error(
+        "\n🚨 AUTHENTICATION REQUIRED: The agent returned an auth link instead of audio."
+      );
+      console.error(
+        `👉 Please click here to authenticate ElevenLabs: ${urlMatch[0]}\n`
+      );
+      throw new Error(
+        "elevenlabs authentication pending. Please authenticate using the link above and restart."
+      );
+    }
     // Return just the clean URL
     return urlMatch[0];
   }

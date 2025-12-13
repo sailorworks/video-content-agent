@@ -1,6 +1,6 @@
 // src/nodes/scripting.ts
 import { Agent, run } from "@openai/agents";
-import type { AgentState } from "../graph/state.js";
+import type { AgentState } from "../state/state.js";
 
 export async function runScriptingStage(state: AgentState) {
   console.log("\n--- STAGE 2: WRITING SCRIPT ---");
