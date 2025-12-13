@@ -54,3 +54,35 @@ export async function getActiveConnectionId(
 
   return activeConnection.id;
 }
+
+/**
+ * HeyGen-specific connection getter as requested by user.
+ * This mirrors the logic provided in the reference snippet.
+ */
+export async function getHeyGenConnectionId(
+  toolkitSlug: string
+): Promise<string> {
+  // 1. Fetch connections for this user (Active ones only)
+  const connections = await composio.connectedAccounts.list({
+    userIds: [COMPOSIO_USER_ID],
+    statuses: ["ACTIVE"],
+  });
+
+  // Sort by createdAt descending (Newest first)
+  const sortedItems = connections.items.sort((a, b) => 
+    new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+  );
+
+  // 2. Find the connection where the toolkit slug matches
+  const activeConnection = sortedItems.find(
+    (c) => c.toolkit.slug.toLowerCase() === toolkitSlug.toLowerCase()
+  );
+
+  if (!activeConnection) {
+    throw new Error(
+      `No active connection found for ${toolkitSlug}. Please authenticate User: ${COMPOSIO_USER_ID}`
+    );
+  }
+
+  return activeConnection.id;
+}
