@@ -1,4 +1,4 @@
-# 🎬 AI Video Content Agent
+# 🎬 Viral AI Influencer Video Content Agent
 
 An AI system that turns your idea into a ready-to-post viral short video. You give a topic, and the system automatically finds trending content across platforms, writes an engaging script (with a chance for you to review and edit it), generates a natural human-like voiceover, and produces a polished short-form video—all with minimal effort from you.
 
