@@ -1,5 +1,6 @@
 // src/index.ts
 import dotenv from "dotenv";
+import inquirer from "inquirer";
 import { runResearchStage } from "./src/agents/research.js";
 import { runScriptingStage } from "./src/agents/scripting.js";
 import { runHumanReviewNode } from "./src/agents/human_review.js";
@@ -10,7 +11,15 @@ import type { AgentState } from "./src/state/state.js";
 dotenv.config();
 
 async function main() {
-  const TOPIC = "voice agents in 2025";
+  const { topic } = await inquirer.prompt([
+    {
+      type: "input",
+      name: "topic",
+      message: "What topic would you like to generate video content for?",
+      default: "voice agents in 2025",
+    },
+  ]);
+  const TOPIC = topic;
 
   // Initialize State
   let state: AgentState = {
