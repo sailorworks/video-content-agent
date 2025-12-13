@@ -4,8 +4,9 @@ An AI system that turns your idea into a ready-to-post viral short video. You gi
 
 ## 📺 Demo
 
+> End-to-end run: topic → research → script approval → voiceover → final short video
 
-https://github.com/sailorworks/video-content-agent/issues/2#issue-3725695682
+https://github.com/user-attachments/assets/5b541fcd-1e78-47c1-a41a-870aef529acc
 
 
 ## ✨ Features
@@ -180,11 +181,6 @@ If you see authentication links in the output:
 2. Complete the OAuth flow
 3. Restart the agent with `npm start`
 
-### Video Generation Fails
-
-- Ensure audio URL is publicly accessible (not localhost)
-- Check HeyGen account quota/credits
-- Verify avatar ID exists in your HeyGen account
 
 ### Script Quality Issues
 
@@ -231,16 +227,12 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 ## 🙏 Acknowledgments
 
 
-- [Composio](https://composio.dev) for seamless API integrations
+- [Composio](https://composio.dev) for seamless API integrations and SDK.
 - [OpenAI](https://openai.com) for GPT-4o and the Agents SDK
 - [ElevenLabs](https://elevenlabs.io) for high-quality voice synthesis
 - [HeyGen](https://heygen.com) for AI avatar technology
 
-## 📧 Contact
-
-For questions or support, please open an issue or reach out to [your-email@example.com](mailto:your-email@example.com).
-
 ---
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-**Built with ❤️ using AI agents**
+**Built with ❤️ using [Composio](https://github.com/ComposioHQ/composio)**
