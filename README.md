@@ -4,16 +4,9 @@ An AI system that turns your idea into a ready-to-post viral short video. You gi
 
 ## 📺 Demo
 
-> **To display the demo video:** Upload `result.mp4` to GitHub and replace the placeholder URL below
 
-https://github.com/user-attachments/assets/your-video-id-here
+https://github.com/sailorworks/video-content-agent/issues/2#issue-3725695682
 
-**How to upload `result.mp4`:**
-1. Go to any GitHub issue or pull request in your repository
-2. Drag and drop `result.mp4` from the root directory into the comment box
-3. GitHub will upload it and generate a URL like: `https://github.com/user-attachments/assets/...`
-4. Copy that URL and replace `your-video-id-here` above
-5. Alternatively, use [GitHub Releases](https://docs.github.com/en/repositories/releasing-projects-on-github/managing-releases-in-a-repository) for larger files
 
 ## ✨ Features
 
