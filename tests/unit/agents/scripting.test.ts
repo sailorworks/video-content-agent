@@ -674,7 +674,7 @@ describe('Scripting Agent Unit Tests', () => {
         researchData: TestFixtureFactory.createResearchData({
           trends: unicodeData.join(' '),
           videos: [
-            TestFixtureFactory.createVideoReference({ title: unicodeData[0] })
+            TestFixtureFactory.createVideoReference({ title: unicodeData[0] || 'Default Title' })
           ]
         })
       })

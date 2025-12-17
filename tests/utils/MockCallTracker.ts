@@ -71,7 +71,7 @@ export class MockCallTracker {
    */
   getLastCallParams(service: string, endpoint: string): any {
     const calls = this.getCallsForEndpoint(service, endpoint)
-    return calls.length > 0 ? calls[calls.length - 1].params : null
+    return calls.length > 0 ? calls[calls.length - 1]?.params : null
   }
 
   /**
@@ -79,7 +79,7 @@ export class MockCallTracker {
    */
   getLastCallResponse(service: string, endpoint: string): any {
     const calls = this.getCallsForEndpoint(service, endpoint)
-    return calls.length > 0 ? calls[calls.length - 1].response : null
+    return calls.length > 0 ? calls[calls.length - 1]?.response : null
   }
 
   /**
@@ -119,8 +119,8 @@ export class MockCallTracker {
         summary[call.service] = {}
       }
       
-      if (!summary[call.service][call.endpoint]) {
-        summary[call.service][call.endpoint] = {
+      if (!summary[call.service]![call.endpoint]) {
+        summary[call.service]![call.endpoint] = {
           count: 0,
           firstCall: call.timestamp,
           lastCall: call.timestamp,
@@ -128,7 +128,7 @@ export class MockCallTracker {
         }
       }
       
-      const endpointSummary = summary[call.service][call.endpoint]
+      const endpointSummary = summary[call.service]![call.endpoint]!
       endpointSummary.count++
       
       if (call.timestamp < endpointSummary.firstCall) {
@@ -151,14 +151,19 @@ export class MockCallTracker {
    * Sets up expectations for API calls that should be made
    */
   expectCall(service: string, endpoint: string, options: ExpectationOptions = {}): void {
-    this.expectations.push({
+    const expectation: CallExpectation = {
       service: service.toLowerCase(),
       endpoint: endpoint.toLowerCase(),
       minCalls: options.minCalls || 1,
       maxCalls: options.maxCalls || Infinity,
-      paramMatcher: options.paramMatcher,
       timeout: options.timeout || 5000
-    })
+    }
+    
+    if (options.paramMatcher) {
+      expectation.paramMatcher = options.paramMatcher
+    }
+    
+    this.expectations.push(expectation)
   }
 
   /**

@@ -10,7 +10,7 @@ vi.mock('../../../src/services/client.js', () => ({
 
 // Mock the OpenAI agents module
 vi.mock('@openai/agents', () => ({
-  Agent: vi.fn(function(config) {
+  Agent: vi.fn(function(this: any, config: any) {
     this.name = config.name
     this.instructions = config.instructions
     this.tools = config.tools

@@ -12,7 +12,7 @@ vi.mock('../../../src/services/client.js', () => ({
 
 // Mock the OpenAI agents module
 vi.mock('@openai/agents', () => ({
-  Agent: vi.fn(function(config) {
+  Agent: vi.fn(function(this: any, config: any) {
     this.name = config.name
     this.instructions = config.instructions
     this.tools = config.tools
@@ -277,8 +277,8 @@ describe('Research Agent Unit Tests', () => {
 
       // Assert
       expect(result.twitterInsights).toHaveLength(2)
-      expect(result.twitterInsights[0]).toEqual(mockTweets[0])
-      expect(result.twitterInsights[1]).toEqual(mockTweets[1])
+      expect(result.twitterInsights?.[0]).toEqual(mockTweets[0])
+      expect(result.twitterInsights?.[1]).toEqual(mockTweets[1])
     })
 
     it('should handle Twitter JSON with markdown formatting', async () => {
@@ -306,7 +306,7 @@ describe('Research Agent Unit Tests', () => {
 
       // Assert
       expect(result.twitterInsights).toHaveLength(1)
-      expect(result.twitterInsights[0]).toEqual(mockTweets[0])
+      expect(result.twitterInsights?.[0]).toEqual(mockTweets[0])
     })
 
     it('should use fallback parsing for malformed Twitter response', async () => {

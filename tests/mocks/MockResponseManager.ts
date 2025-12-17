@@ -133,7 +133,7 @@ export class MockResponseManager {
    */
   getLastCallParams(service: string, endpoint: string): any {
     const calls = this.getCallHistoryForEndpoint(service, endpoint)
-    return calls.length > 0 ? calls[calls.length - 1].params : null
+    return calls.length > 0 ? calls[calls.length - 1]?.params : null
   }
 
   /**

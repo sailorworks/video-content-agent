@@ -162,8 +162,8 @@ describe('Mock Infrastructure', () => {
       
       expect(youtubeCalls).toHaveLength(1)
       expect(twitterCalls).toHaveLength(1)
-      expect(youtubeCalls[0].service).toBe('youtube')
-      expect(twitterCalls[0].service).toBe('twitter')
+      expect(youtubeCalls[0]?.service).toBe('youtube')
+      expect(twitterCalls[0]?.service).toBe('twitter')
     })
 
     it('should generate call summaries', () => {
@@ -176,7 +176,7 @@ describe('Mock Infrastructure', () => {
       })
       
       const summary = mockCallTracker.getCallSummary()
-      expect(summary.youtube.search.count).toBe(1)
+      expect(summary.youtube?.search?.count).toBe(1)
     })
   })
 
@@ -253,7 +253,7 @@ describe('Mock Infrastructure', () => {
     })
 
     it('should configure HeyGen polling scenario', () => {
-      configureMockScenario(MockScenarios.HEYGEN_POLLING)
+      configureMockScenario(MockScenarios.HEYGEN_POLLING as any)
       
       // First call should return processing
       const first = mockResponseManager.getResponse('heygen', 'status')

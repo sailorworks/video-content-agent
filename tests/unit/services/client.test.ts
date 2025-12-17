@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest'
-import { mockComposioClient } from '../../mocks/MockComposioClient'
+import { mockComposioClient } from '../../mocks/MockComposioClient.js'
 
 describe('Service Layer - Composio Client', () => {
   beforeEach(() => {
@@ -26,8 +26,8 @@ describe('Service Layer - Composio Client', () => {
       
       const callHistory = mockComposioClient.getCallHistory()
       expect(callHistory).toHaveLength(1)
-      expect(callHistory[0].service).toBe('youtube')
-      expect(callHistory[0].endpoint).toBe('search')
+      expect(callHistory[0]?.service).toBe('youtube')
+      expect(callHistory[0]?.endpoint).toBe('search')
     })
 
     it('should reset state between tests', () => {
@@ -108,8 +108,8 @@ describe('Service Layer - Composio Client', () => {
       
       const callHistory = mockComposioClient.getCallHistory()
       expect(callHistory).toHaveLength(1)
-      expect(callHistory[0].service).toBe('composio')
-      expect(callHistory[0].endpoint).toBe('getActiveConnectionId')
+      expect(callHistory[0]?.service).toBe('composio')
+      expect(callHistory[0]?.endpoint).toBe('getActiveConnectionId')
     })
   })
 
@@ -172,7 +172,7 @@ describe('Service Layer - Composio Client', () => {
       
       const callHistory = mockComposioClient.getCallHistory()
       expect(callHistory).toHaveLength(1)
-      expect(callHistory[0].error).toBeDefined()
+      expect(callHistory[0]?.error).toBeDefined()
     })
   })
 
@@ -201,7 +201,7 @@ describe('Service Layer - Composio Client', () => {
       
       const callHistory = mockComposioClient.getCallHistoryForService('youtube')
       expect(callHistory).toHaveLength(1)
-      expect(callHistory[0].endpoint).toBe('search')
+      expect(callHistory[0]?.endpoint).toBe('search')
     })
 
     it('should return default responses for unconfigured endpoints', async () => {
@@ -229,7 +229,7 @@ describe('Service Layer - Composio Client', () => {
       const responses = await Promise.all(promises)
       
       expect(responses).toHaveLength(3)
-      responses.forEach(response => {
+      responses.forEach((response: any) => {
         expect(response.success).toBe(true)
       })
       

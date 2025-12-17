@@ -46,7 +46,7 @@ describe('Video Generation Agent Unit Tests', () => {
       on: vi.fn()
     }
     vi.mocked(fs.createWriteStream).mockReturnValue(mockWriteStream as any)
-    vi.mocked(fs.unlink).mockImplementation((path, callback) => callback && callback())
+    vi.mocked(fs.unlink).mockImplementation((path, callback) => callback && callback(null))
     
     // Setup mock HTTPS
     mockHttpsGet = vi.fn()
@@ -328,7 +328,7 @@ describe('Video Generation Agent Unit Tests', () => {
       
       // Verify status check calls
       const statusCalls = vi.mocked(composio.tools.proxyExecute).mock.calls.slice(1)
-      statusCalls.forEach(call => {
+      statusCalls.forEach((call: any) => {
         expect(call[0]).toEqual({
           connectedAccountId: 'mock-heygen-connection-123',
           method: 'GET',
@@ -662,7 +662,7 @@ describe('Video Generation Agent Unit Tests', () => {
       expect(getHeyGenConnectionId).toHaveBeenCalledWith('HEYGEN')
       
       const allCalls = vi.mocked(composio.tools.proxyExecute).mock.calls
-      allCalls.forEach(call => {
+      allCalls.forEach((call: any) => {
         expect(call[0].connectedAccountId).toBe('mock-heygen-connection-123')
       })
       
@@ -804,7 +804,7 @@ describe('Video Generation Agent Unit Tests', () => {
         pipe: vi.fn()
       }
       
-      mockHttpsGet.mockImplementation((url, callback) => {
+      mockHttpsGet.mockImplementation((url: any, callback: any) => {
         callback(mockResponse)
         return {
           on: vi.fn()
@@ -839,7 +839,7 @@ describe('Video Generation Agent Unit Tests', () => {
 
       // Mock HTTPS network error
       const networkError = new Error('Network timeout')
-      mockHttpsGet.mockImplementation((url, callback) => {
+      mockHttpsGet.mockImplementation((url: any, callback: any) => {
         return {
           on: (event: string, handler: Function) => {
             if (event === 'error') {
@@ -886,7 +886,7 @@ describe('Video Generation Agent Unit Tests', () => {
 
       // Mock HTTPS request that triggers file write error
       const writeError = new Error('Disk full')
-      mockHttpsGet.mockImplementation((url, callback) => {
+      mockHttpsGet.mockImplementation((url: any, callback: any) => {
         // Don't call callback, instead return request object that will emit error
         return {
           on: (event: string, handler: Function) => {
@@ -922,7 +922,7 @@ describe('Video Generation Agent Unit Tests', () => {
       
       // Setup mocks for both requests - need to handle concurrent calls properly
       let callCount = 0
-      vi.mocked(composio.tools.proxyExecute).mockImplementation(async (params) => {
+      vi.mocked(composio.tools.proxyExecute).mockImplementation(async (params: any) => {
         callCount++
         if (params.endpoint === '/v2/video/generate') {
           if (callCount <= 2) {
@@ -1060,7 +1060,7 @@ describe('Video Generation Agent Unit Tests', () => {
 
       // Assert
       const allCalls = vi.mocked(composio.tools.proxyExecute).mock.calls
-      allCalls.forEach(call => {
+      allCalls.forEach((call: any) => {
         expect(call[0].connectedAccountId).toBe(connectionId)
       })
       
@@ -1179,7 +1179,7 @@ describe('Video Generation Agent Unit Tests', () => {
       pipe: vi.fn()
     }
     
-    mockHttpsGet.mockImplementation((url, callback) => {
+    mockHttpsGet.mockImplementation((url: any, callback: any) => {
       callback(mockResponse)
       return {
         on: vi.fn()
