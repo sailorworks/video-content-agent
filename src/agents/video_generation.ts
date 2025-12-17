@@ -1,21 +1,62 @@
-// src/nodes/video_generation.ts
 import { composio, getHeyGenConnectionId } from "../services/client.js";
+import * as fs from "fs";
+import * as path from "path";
+import * as https from "https";
+import * as os from "os";
 
 const AVATAR_ID = "109cdee34a164003b0e847ffce93828e"; // Jasmine
 const POLLING_INTERVAL = 15000; // 15 seconds
 
+/**
+ * Download video from signed URL to Downloads folder
+ */
+async function downloadVideo(videoUrl: string): Promise<string> {
+  const timestamp = Date.now();
+  const filename = `heygen_video_${timestamp}.mp4`;
+  const downloadsPath = path.join(os.homedir(), "Downloads");
+  const outputPath = path.join(downloadsPath, filename);
+
+  console.log(`⬇️  Downloading video...`);
+  console.log(`📁 Saving to: ${outputPath}`);
+
+  return new Promise((resolve, reject) => {
+    const file = fs.createWriteStream(outputPath);
+
+    https
+      .get(videoUrl, (response) => {
+        if (response.statusCode !== 200) {
+          reject(
+            new Error(`Failed to download video. Status: ${response.statusCode}`)
+          );
+          return;
+        }
+
+        response.pipe(file);
+
+        file.on("finish", () => {
+          file.close();
+          console.log("✅ Download completed!");
+          resolve(outputPath);
+        });
+      })
+      .on("error", (err) => {
+        fs.unlink(outputPath, () => {});
+        reject(err);
+      });
+  });
+}
+
 export async function runVideoGenerationStage(audioUrl: string) {
   console.log("\n--- STAGE 4: VIDEO GENERATION (HEYGEN) ---");
 
-  // 1. Get Authentication
+  // 1. Auth
   const connectionId = await getHeyGenConnectionId("HEYGEN");
   console.log("🔌 Using HeyGen Connection ID:", connectionId);
 
-  // 2. Construct Payload
-  // Note: audioUrl must be a publicly accessible URL, not a local file path.
+  // 2. Payload
   const payload = {
     test: false,
-    dimension: { width: 720, height: 1280 }, // Vertical 9:16
+    dimension: { width: 720, height: 1280 },
     video_inputs: [
       {
         character: {
@@ -29,13 +70,13 @@ export async function runVideoGenerationStage(audioUrl: string) {
         },
         background: {
           type: "color",
-          value: "#FFFFFF", // Clear/White
+          value: "#FFFFFF",
         },
       },
     ],
   };
 
-  // 3. Start Generation (Proxy Execute)
+  // 3. Start generation
   console.log("🎥 Sending request to HeyGen...");
   const generateResp = await composio.tools.proxyExecute({
     connectedAccountId: connectionId,
@@ -44,7 +85,6 @@ export async function runVideoGenerationStage(audioUrl: string) {
     body: payload,
   });
 
-  // Handle potential errors in starting
   const responseData = generateResp.data as any;
   if (responseData.error) {
     throw new Error(
@@ -59,7 +99,7 @@ export async function runVideoGenerationStage(audioUrl: string) {
 
   console.log(`⏳ Generation started! Video ID: ${videoId}`);
 
-  // 4. Polling Loop
+  // 4. Polling
   while (true) {
     const statusResp = await composio.tools.proxyExecute({
       connectedAccountId: connectionId,
@@ -75,12 +115,28 @@ export async function runVideoGenerationStage(audioUrl: string) {
 
     if (status === "completed") {
       console.log("\n✅ Video generation complete!");
-      return statusData.video_url;
-    } else if (status === "failed") {
-      throw new Error(`Generation Failed: ${JSON.stringify(statusData.error)}`);
+
+      const videoUrl = statusData.video_url;
+      console.log("\n=================================");
+      console.log("🚀 FINAL VIDEO READY:", videoUrl);
+      console.log("=================================\n");
+
+      // ⬇️ Download immediately
+      const savedPath = await downloadVideo(videoUrl);
+      console.log(`🎉 Video saved at: ${savedPath}`);
+
+      return {
+        videoUrl,
+        savedPath,
+      };
     }
 
-    // Wait before next check
+    if (status === "failed") {
+      throw new Error(
+        `Generation Failed: ${JSON.stringify(statusData.error)}`
+      );
+    }
+
     await new Promise((resolve) => setTimeout(resolve, POLLING_INTERVAL));
   }
 }
