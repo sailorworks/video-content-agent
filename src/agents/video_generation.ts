@@ -1,4 +1,8 @@
-import { composio, getHeyGenConnectionId } from "../services/client.js";
+// src/agents/video_generation.ts
+import {
+  getComposioClient,
+  getHeyGenConnectionId,
+} from "../services/client.js";
 import * as fs from "fs";
 import * as path from "path";
 import * as https from "https";
@@ -26,7 +30,9 @@ async function downloadVideo(videoUrl: string): Promise<string> {
       .get(videoUrl, (response) => {
         if (response.statusCode !== 200) {
           reject(
-            new Error(`Failed to download video. Status: ${response.statusCode}`)
+            new Error(
+              `Failed to download video. Status: ${response.statusCode}`
+            )
           );
           return;
         }
@@ -48,6 +54,9 @@ async function downloadVideo(videoUrl: string): Promise<string> {
 
 export async function runVideoGenerationStage(audioUrl: string) {
   console.log("\n--- STAGE 4: VIDEO GENERATION (HEYGEN) ---");
+
+  // Initialize client (ensures env vars are valid)
+  const composio = getComposioClient();
 
   // 1. Auth
   const connectionId = await getHeyGenConnectionId("HEYGEN");
@@ -132,9 +141,7 @@ export async function runVideoGenerationStage(audioUrl: string) {
     }
 
     if (status === "failed") {
-      throw new Error(
-        `Generation Failed: ${JSON.stringify(statusData.error)}`
-      );
+      throw new Error(`Generation Failed: ${JSON.stringify(statusData.error)}`);
     }
 
     await new Promise((resolve) => setTimeout(resolve, POLLING_INTERVAL));

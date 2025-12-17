@@ -8,11 +8,11 @@ import * as path from 'path'
 
 // Mock the client module
 vi.mock('../../../src/services/client.js', () => ({
-  composio: {
+  getComposioClient: vi.fn(() => ({
     tools: {
       proxyExecute: vi.fn()
     }
-  },
+  })),
   getHeyGenConnectionId: vi.fn()
 }))
 
@@ -23,22 +23,22 @@ vi.mock('os')
 vi.mock('path')
 
 describe('Video Generation Agent Unit Tests', () => {
-  let composio: any
+  let getComposioClient: any
   let getHeyGenConnectionId: any
   let mockWriteStream: any
   let mockHttpsGet: any
   let mockConsoleLog: any
+  let mockComposioClient: any
 
   beforeEach(async () => {
     // Import modules dynamically
     const clientModule = await import('../../../src/services/client.js')
     
-    composio = clientModule.composio
+    getComposioClient = clientModule.getComposioClient
     getHeyGenConnectionId = clientModule.getHeyGenConnectionId
     
     // Reset all mocks before each test
     vi.clearAllMocks()
-    mockComposioClient.reset()
     
     // Setup mock file system
     mockWriteStream = {
@@ -62,6 +62,14 @@ describe('Video Generation Agent Unit Tests', () => {
     
     // Setup default mock responses
     vi.mocked(getHeyGenConnectionId).mockResolvedValue('mock-heygen-connection-123')
+    
+    // Setup the composio client mock to return a mock with proxyExecute
+    mockComposioClient = {
+      tools: {
+        proxyExecute: vi.fn()
+      }
+    }
+    vi.mocked(getComposioClient).mockReturnValue(mockComposioClient)
   })
 
   afterEach(() => {
@@ -73,7 +81,7 @@ describe('Video Generation Agent Unit Tests', () => {
       // Arrange
       const audioUrl = 'https://api.elevenlabs.io/v1/audio/test-audio.mp3'
       
-      vi.mocked(composio.tools.proxyExecute)
+      vi.mocked(mockComposioClient.tools.proxyExecute)
         .mockResolvedValueOnce({
           data: {
             data: { video_id: 'test-video-123' }
@@ -103,7 +111,7 @@ describe('Video Generation Agent Unit Tests', () => {
       // Arrange
       const audioUrl = 'https://api.elevenlabs.io/v1/audio/payload-test.mp3'
       
-      vi.mocked(composio.tools.proxyExecute)
+      vi.mocked(mockComposioClient.tools.proxyExecute)
         .mockResolvedValueOnce({
           data: {
             data: { video_id: 'payload-test-456' }
@@ -124,7 +132,7 @@ describe('Video Generation Agent Unit Tests', () => {
       await runVideoGenerationStage(audioUrl)
 
       // Assert
-      expect(composio.tools.proxyExecute).toHaveBeenCalledWith({
+      expect(mockComposioClient.tools.proxyExecute).toHaveBeenCalledWith({
         connectedAccountId: 'mock-heygen-connection-123',
         method: 'POST',
         endpoint: '/v2/video/generate',
@@ -156,7 +164,7 @@ describe('Video Generation Agent Unit Tests', () => {
       // Arrange
       const audioUrl = 'https://api.elevenlabs.io/v1/audio/avatar-test.mp3'
       
-      vi.mocked(composio.tools.proxyExecute)
+      vi.mocked(mockComposioClient.tools.proxyExecute)
         .mockResolvedValueOnce({
           data: {
             data: { video_id: 'avatar-test-789' }
@@ -177,7 +185,7 @@ describe('Video Generation Agent Unit Tests', () => {
       await runVideoGenerationStage(audioUrl)
 
       // Assert
-      const generateCall = vi.mocked(composio.tools.proxyExecute).mock.calls[0][0]
+      const generateCall = vi.mocked(mockComposioClient.tools.proxyExecute).mock.calls[0][0]
       expect(generateCall.body.video_inputs[0].character).toEqual({
         type: 'avatar',
         avatar_id: '109cdee34a164003b0e847ffce93828e',
@@ -189,7 +197,7 @@ describe('Video Generation Agent Unit Tests', () => {
       // Arrange
       const audioUrl = 'https://api.elevenlabs.io/v1/audio/dimensions-test.mp3'
       
-      vi.mocked(composio.tools.proxyExecute)
+      vi.mocked(mockComposioClient.tools.proxyExecute)
         .mockResolvedValueOnce({
           data: {
             data: { video_id: 'dimensions-test-abc' }
@@ -210,7 +218,7 @@ describe('Video Generation Agent Unit Tests', () => {
       await runVideoGenerationStage(audioUrl)
 
       // Assert
-      const generateCall = vi.mocked(composio.tools.proxyExecute).mock.calls[0][0]
+      const generateCall = vi.mocked(mockComposioClient.tools.proxyExecute).mock.calls[0][0]
       expect(generateCall.body.dimension).toEqual({
         width: 720,
         height: 1280
@@ -221,7 +229,7 @@ describe('Video Generation Agent Unit Tests', () => {
       // Arrange
       const audioUrl = 'https://api.elevenlabs.io/v1/audio/production-test.mp3'
       
-      vi.mocked(composio.tools.proxyExecute)
+      vi.mocked(mockComposioClient.tools.proxyExecute)
         .mockResolvedValueOnce({
           data: {
             data: { video_id: 'production-test-def' }
@@ -242,7 +250,7 @@ describe('Video Generation Agent Unit Tests', () => {
       await runVideoGenerationStage(audioUrl)
 
       // Assert
-      const generateCall = vi.mocked(composio.tools.proxyExecute).mock.calls[0][0]
+      const generateCall = vi.mocked(mockComposioClient.tools.proxyExecute).mock.calls[0][0]
       expect(generateCall.body.test).toBe(false)
     })
 
@@ -250,7 +258,7 @@ describe('Video Generation Agent Unit Tests', () => {
       // Arrange
       const audioUrl = 'https://api.elevenlabs.io/v1/audio/background-test.mp3'
       
-      vi.mocked(composio.tools.proxyExecute)
+      vi.mocked(mockComposioClient.tools.proxyExecute)
         .mockResolvedValueOnce({
           data: {
             data: { video_id: 'background-test-ghi' }
@@ -271,7 +279,7 @@ describe('Video Generation Agent Unit Tests', () => {
       await runVideoGenerationStage(audioUrl)
 
       // Assert
-      const generateCall = vi.mocked(composio.tools.proxyExecute).mock.calls[0][0]
+      const generateCall = vi.mocked(mockComposioClient.tools.proxyExecute).mock.calls[0][0]
       expect(generateCall.body.video_inputs[0].background).toEqual({
         type: 'color',
         value: '#FFFFFF'
@@ -293,7 +301,7 @@ describe('Video Generation Agent Unit Tests', () => {
         return 123 as any
       })
       
-      vi.mocked(composio.tools.proxyExecute)
+      vi.mocked(mockComposioClient.tools.proxyExecute)
         .mockResolvedValueOnce({
           data: {
             data: { video_id: videoId }
@@ -324,10 +332,10 @@ describe('Video Generation Agent Unit Tests', () => {
       await runVideoGenerationStage(audioUrl)
 
       // Assert - Should have made 4 calls: 1 generate + 3 status checks
-      expect(composio.tools.proxyExecute).toHaveBeenCalledTimes(4)
+      expect(mockComposioClient.tools.proxyExecute).toHaveBeenCalledTimes(4)
       
       // Verify status check calls
-      const statusCalls = vi.mocked(composio.tools.proxyExecute).mock.calls.slice(1)
+      const statusCalls = vi.mocked(mockComposioClient.tools.proxyExecute).mock.calls.slice(1)
       statusCalls.forEach((call: any) => {
         expect(call[0]).toEqual({
           connectedAccountId: 'mock-heygen-connection-123',
@@ -353,7 +361,7 @@ describe('Video Generation Agent Unit Tests', () => {
         return 123 as any
       })
       
-      vi.mocked(composio.tools.proxyExecute)
+      vi.mocked(mockComposioClient.tools.proxyExecute)
         .mockResolvedValueOnce({
           data: {
             data: { video_id: videoId }
@@ -389,7 +397,7 @@ describe('Video Generation Agent Unit Tests', () => {
       await runVideoGenerationStage(audioUrl)
 
       // Assert
-      expect(composio.tools.proxyExecute).toHaveBeenCalledTimes(5)
+      expect(mockComposioClient.tools.proxyExecute).toHaveBeenCalledTimes(5)
       
       mockSetTimeout.mockRestore()
     })
@@ -409,7 +417,7 @@ describe('Video Generation Agent Unit Tests', () => {
         return 123 as any
       })
       
-      vi.mocked(composio.tools.proxyExecute)
+      vi.mocked(mockComposioClient.tools.proxyExecute)
         .mockResolvedValueOnce({
           data: {
             data: { video_id: videoId }
@@ -454,7 +462,7 @@ describe('Video Generation Agent Unit Tests', () => {
         return 123 as any
       })
       
-      vi.mocked(composio.tools.proxyExecute)
+      vi.mocked(mockComposioClient.tools.proxyExecute)
         .mockResolvedValueOnce({
           data: {
             data: { video_id: videoId }
@@ -490,7 +498,7 @@ describe('Video Generation Agent Unit Tests', () => {
         return 123 as any
       })
       
-      vi.mocked(composio.tools.proxyExecute)
+      vi.mocked(mockComposioClient.tools.proxyExecute)
         .mockResolvedValueOnce({
           data: {
             data: { video_id: videoId }
@@ -516,7 +524,7 @@ describe('Video Generation Agent Unit Tests', () => {
       await runVideoGenerationStage(audioUrl)
 
       // Assert - Should continue polling despite unknown status
-      expect(composio.tools.proxyExecute).toHaveBeenCalledTimes(3)
+      expect(mockComposioClient.tools.proxyExecute).toHaveBeenCalledTimes(3)
       
       mockSetTimeout.mockRestore()
     })
@@ -541,7 +549,7 @@ describe('Video Generation Agent Unit Tests', () => {
         return 123 as any
       })
       
-      vi.mocked(composio.tools.proxyExecute)
+      vi.mocked(mockComposioClient.tools.proxyExecute)
         .mockResolvedValueOnce({
           data: {
             data: { video_id: videoId }
@@ -596,7 +604,7 @@ describe('Video Generation Agent Unit Tests', () => {
       for (const audioUrl of audioUrls) {
         vi.clearAllMocks()
         
-        vi.mocked(composio.tools.proxyExecute)
+        vi.mocked(mockComposioClient.tools.proxyExecute)
           .mockResolvedValueOnce({
             data: {
               data: { video_id: 'test-video-123' }
@@ -617,7 +625,7 @@ describe('Video Generation Agent Unit Tests', () => {
         await runVideoGenerationStage(audioUrl)
 
         // Assert
-        const generateCall = vi.mocked(composio.tools.proxyExecute).mock.calls[0][0]
+        const generateCall = vi.mocked(mockComposioClient.tools.proxyExecute).mock.calls[0][0]
         expect(generateCall.body.video_inputs[0].voice.audio_url).toBe(audioUrl)
       }
       
@@ -638,7 +646,7 @@ describe('Video Generation Agent Unit Tests', () => {
         return 123 as any
       })
       
-      vi.mocked(composio.tools.proxyExecute)
+      vi.mocked(mockComposioClient.tools.proxyExecute)
         .mockResolvedValueOnce({
           data: {
             data: { video_id: videoId }
@@ -661,7 +669,7 @@ describe('Video Generation Agent Unit Tests', () => {
       // Assert - Verify all stages used consistent connection ID
       expect(getHeyGenConnectionId).toHaveBeenCalledWith('HEYGEN')
       
-      const allCalls = vi.mocked(composio.tools.proxyExecute).mock.calls
+      const allCalls = vi.mocked(mockComposioClient.tools.proxyExecute).mock.calls
       allCalls.forEach((call: any) => {
         expect(call[0].connectedAccountId).toBe('mock-heygen-connection-123')
       })
@@ -685,7 +693,7 @@ describe('Video Generation Agent Unit Tests', () => {
         return 123 as any
       })
       
-      vi.mocked(composio.tools.proxyExecute)
+      vi.mocked(mockComposioClient.tools.proxyExecute)
         .mockResolvedValueOnce({
           data: {
             data: { video_id: videoId }
@@ -726,7 +734,7 @@ describe('Video Generation Agent Unit Tests', () => {
       // Arrange
       const audioUrl = 'https://api.elevenlabs.io/v1/audio/no-video-id.mp3'
       
-      vi.mocked(composio.tools.proxyExecute)
+      vi.mocked(mockComposioClient.tools.proxyExecute)
         .mockResolvedValueOnce({
           data: {
             data: {} // No video_id field
@@ -750,7 +758,7 @@ describe('Video Generation Agent Unit Tests', () => {
       
       const mockDateNow = vi.spyOn(Date, 'now').mockReturnValue(timestamp)
       
-      vi.mocked(composio.tools.proxyExecute)
+      vi.mocked(mockComposioClient.tools.proxyExecute)
         .mockResolvedValueOnce({
           data: {
             data: { video_id: 'download-test-123' }
@@ -783,7 +791,7 @@ describe('Video Generation Agent Unit Tests', () => {
       const audioUrl = 'https://api.elevenlabs.io/v1/audio/download-error.mp3'
       const videoUrl = 'https://heygen.com/share/download-error.mp4'
       
-      vi.mocked(composio.tools.proxyExecute)
+      vi.mocked(mockComposioClient.tools.proxyExecute)
         .mockResolvedValueOnce({
           data: {
             data: { video_id: 'download-error-123' }
@@ -822,7 +830,7 @@ describe('Video Generation Agent Unit Tests', () => {
       const audioUrl = 'https://api.elevenlabs.io/v1/audio/network-error.mp3'
       const videoUrl = 'https://heygen.com/share/network-error.mp4'
       
-      vi.mocked(composio.tools.proxyExecute)
+      vi.mocked(mockComposioClient.tools.proxyExecute)
         .mockResolvedValueOnce({
           data: {
             data: { video_id: 'network-error-123' }
@@ -869,7 +877,7 @@ describe('Video Generation Agent Unit Tests', () => {
         return 123 as any
       })
       
-      vi.mocked(composio.tools.proxyExecute)
+      vi.mocked(mockComposioClient.tools.proxyExecute)
         .mockResolvedValueOnce({
           data: {
             data: { video_id: 'write-error-123' }
@@ -922,7 +930,7 @@ describe('Video Generation Agent Unit Tests', () => {
       
       // Setup mocks for both requests - need to handle concurrent calls properly
       let callCount = 0
-      vi.mocked(composio.tools.proxyExecute).mockImplementation(async (params: any) => {
+      vi.mocked(mockComposioClient.tools.proxyExecute).mockImplementation(async (params: any) => {
         callCount++
         if (params.endpoint === '/v2/video/generate') {
           if (callCount <= 2) {
@@ -973,7 +981,7 @@ describe('Video Generation Agent Unit Tests', () => {
         return 123 as any
       })
       
-      vi.mocked(composio.tools.proxyExecute)
+      vi.mocked(mockComposioClient.tools.proxyExecute)
         .mockResolvedValueOnce({
           data: {
             data: { video_id: 'download-progress-123' }
@@ -1033,7 +1041,7 @@ describe('Video Generation Agent Unit Tests', () => {
         return 123 as any
       })
       
-      vi.mocked(composio.tools.proxyExecute)
+      vi.mocked(mockComposioClient.tools.proxyExecute)
         .mockResolvedValueOnce({
           data: {
             data: { video_id: 'consistent-test-456' }
@@ -1059,7 +1067,7 @@ describe('Video Generation Agent Unit Tests', () => {
       await runVideoGenerationStage(audioUrl)
 
       // Assert
-      const allCalls = vi.mocked(composio.tools.proxyExecute).mock.calls
+      const allCalls = vi.mocked(mockComposioClient.tools.proxyExecute).mock.calls
       allCalls.forEach((call: any) => {
         expect(call[0].connectedAccountId).toBe(connectionId)
       })
@@ -1076,7 +1084,7 @@ describe('Video Generation Agent Unit Tests', () => {
         message: 'Invalid authentication credentials'
       }
       
-      vi.mocked(composio.tools.proxyExecute)
+      vi.mocked(mockComposioClient.tools.proxyExecute)
         .mockResolvedValueOnce({
           data: {
             error: errorResponse
@@ -1093,7 +1101,7 @@ describe('Video Generation Agent Unit Tests', () => {
       // Arrange
       const audioUrl = 'https://api.elevenlabs.io/v1/audio/rate-limit.mp3'
       
-      vi.mocked(composio.tools.proxyExecute)
+      vi.mocked(mockComposioClient.tools.proxyExecute)
         .mockRejectedValueOnce(new Error('Rate limit exceeded. Please try again later.'))
 
       // Act & Assert
@@ -1106,7 +1114,7 @@ describe('Video Generation Agent Unit Tests', () => {
       // Arrange
       const audioUrl = 'https://api.elevenlabs.io/v1/audio/timeout.mp3'
       
-      vi.mocked(composio.tools.proxyExecute)
+      vi.mocked(mockComposioClient.tools.proxyExecute)
         .mockRejectedValueOnce(new Error('Request timeout'))
 
       // Act & Assert
@@ -1117,7 +1125,7 @@ describe('Video Generation Agent Unit Tests', () => {
       // Arrange
       const audioUrl = 'https://api.elevenlabs.io/v1/audio/malformed.mp3'
       
-      vi.mocked(composio.tools.proxyExecute)
+      vi.mocked(mockComposioClient.tools.proxyExecute)
         .mockResolvedValueOnce({
           data: {
             data: null // Malformed response - data is null
@@ -1145,7 +1153,7 @@ describe('Video Generation Agent Unit Tests', () => {
         return 123 as any
       })
       
-      vi.mocked(composio.tools.proxyExecute)
+      vi.mocked(mockComposioClient.tools.proxyExecute)
         .mockResolvedValueOnce({
           data: {
             data: { video_id: 'connection-log-456' }
