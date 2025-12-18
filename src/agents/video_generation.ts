@@ -10,6 +10,7 @@ import * as os from "os";
 
 const AVATAR_ID = "109cdee34a164003b0e847ffce93828e"; // Jasmine
 const POLLING_INTERVAL = 15000; // 15 seconds
+const MAX_POLLING_ATTEMPTS = 60; // 10 minutes total (40 * 15s)
 
 /**
  * Download video from signed URL to Downloads folder
@@ -108,8 +109,9 @@ export async function runVideoGenerationStage(audioUrl: string) {
 
   console.log(`⏳ Generation started! Video ID: ${videoId}`);
 
-  // 4. Polling
-  while (true) {
+  // 4. Polling with timeout
+  let attempts = 0;
+  while (attempts < MAX_POLLING_ATTEMPTS) {
     const statusResp = await composio.tools.proxyExecute({
       connectedAccountId: connectionId,
       method: "GET",
@@ -120,7 +122,11 @@ export async function runVideoGenerationStage(audioUrl: string) {
     const statusData = (statusResp.data as any)?.data;
     const status = statusData?.status;
 
-    process.stdout.write(`   Status: ${status}... \r`);
+    process.stdout.write(
+      `   Status: ${status}... (attempt ${
+        attempts + 1
+      }/${MAX_POLLING_ATTEMPTS}) \r`
+    );
 
     if (status === "completed") {
       console.log("\n✅ Video generation complete!");
@@ -144,6 +150,14 @@ export async function runVideoGenerationStage(audioUrl: string) {
       throw new Error(`Generation Failed: ${JSON.stringify(statusData.error)}`);
     }
 
+    attempts++;
     await new Promise((resolve) => setTimeout(resolve, POLLING_INTERVAL));
   }
+
+  // Timeout reached
+  throw new Error(
+    `Video generation timed out after ${MAX_POLLING_ATTEMPTS} attempts (${
+      (MAX_POLLING_ATTEMPTS * POLLING_INTERVAL) / 60000
+    } minutes). Video ID: ${videoId}`
+  );
 }
