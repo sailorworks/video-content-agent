@@ -1,6 +1,10 @@
 import { Agent, hostedMcpTool, run } from "@openai/agents";
 import { createToolkitSession, COMPOSIO_USER_ID } from "../services/client.js";
-import type { ResearchData, VideoReference } from "../state/state.js";
+import type {
+  ResearchData,
+  VideoReference,
+  TwitterInsight,
+} from "../state/state.js";
 
 export async function runResearchStage(topic: string): Promise<ResearchData> {
   console.log(`\n--- STAGE 1: RESEARCHING "${topic}" ---`);
@@ -159,7 +163,7 @@ export async function runResearchStage(topic: string): Promise<ResearchData> {
   console.log("🐦 Fetching viral Twitter threads...");
   const twitterResult = await run(twitterAgent, "Find viral threads.");
 
-  let twitterInsights: any[] = [];
+  let twitterInsights: TwitterInsight[] = [];
   if (twitterResult.finalOutput) {
     try {
       const cleanJson = twitterResult.finalOutput

@@ -92,11 +92,17 @@ describe('Scripting Agent Unit Tests', () => {
           twitterInsights: [
             {
               text: 'This AI breakthrough is absolutely mind-blowing!',
-              likes: 15000
+              url: 'https://twitter.com/user1/status/123456789',
+              likes: 15000,
+              comments: 250,
+              views: 50000
             },
             {
               text: 'The future of technology is here and it\'s incredible',
-              likes: 8500
+              url: 'https://twitter.com/user2/status/987654321',
+              likes: 8500,
+              comments: 180,
+              views: 32000
             }
           ]
         })

@@ -5,11 +5,19 @@ export interface VideoReference {
   viewCount?: string;
 }
 
+export interface TwitterInsight {
+  text: string;
+  url: string;
+  likes: number;
+  comments: number;
+  views: number;
+}
+
 export interface ResearchData {
   videos: VideoReference[];
   rawTranscripts: string;
   trends: string;
-  twitterInsights?: any[];
+  twitterInsights?: TwitterInsight[];
 }
 
 export interface AgentState {

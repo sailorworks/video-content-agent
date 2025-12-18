@@ -12,6 +12,30 @@ const AVATAR_ID = "109cdee34a164003b0e847ffce93828e"; // Jasmine
 const POLLING_INTERVAL = 15000; // 15 seconds
 const MAX_POLLING_ATTEMPTS = 60; // 10 minutes total (40 * 15s)
 
+// HeyGen API Response Types
+interface HeyGenGenerateResponse {
+  data?: {
+    video_id: string;
+  };
+  error?: {
+    message?: string;
+    code?: string;
+  };
+}
+
+interface HeyGenStatusData {
+  status: string;
+  video_url?: string;
+  error?: {
+    message?: string;
+    code?: string;
+  };
+}
+
+interface HeyGenStatusResponse {
+  data?: HeyGenStatusData;
+}
+
 /**
  * Download video from signed URL to Downloads folder
  */
@@ -95,7 +119,7 @@ export async function runVideoGenerationStage(audioUrl: string) {
     body: payload,
   });
 
-  const responseData = generateResp.data as any;
+  const responseData = generateResp.data as HeyGenGenerateResponse;
   if (responseData.error) {
     throw new Error(
       `HeyGen Start Error: ${JSON.stringify(responseData.error)}`
@@ -119,8 +143,13 @@ export async function runVideoGenerationStage(audioUrl: string) {
       parameters: [{ name: "video_id", value: videoId, in: "query" }],
     });
 
-    const statusData = (statusResp.data as any)?.data;
-    const status = statusData?.status;
+    const statusData = (statusResp.data as HeyGenStatusResponse)?.data;
+
+    if (!statusData) {
+      throw new Error("Invalid status response from HeyGen");
+    }
+
+    const status = statusData.status;
 
     process.stdout.write(
       `   Status: ${status}... (attempt ${
@@ -130,6 +159,10 @@ export async function runVideoGenerationStage(audioUrl: string) {
 
     if (status === "completed") {
       console.log("\n✅ Video generation complete!");
+
+      if (!statusData.video_url) {
+        throw new Error("Video completed but no URL returned");
+      }
 
       const videoUrl = statusData.video_url;
       console.log("\n=================================");
