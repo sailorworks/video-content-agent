@@ -45,13 +45,22 @@ export async function runResearchStage(topic: string): Promise<ResearchData> {
       videos = JSON.parse(cleanJson);
       console.log(`✅ Found ${videos.length} videos`);
     } catch (e) {
-      console.error("⚠️ YouTube JSON parse failed:", ytResult.finalOutput);
+      console.error("⚠️ YouTube JSON parse failed:", e);
+      console.error("Raw output:", ytResult.finalOutput);
+
+      // Attempt fallback regex extraction
       const match = ytResult.finalOutput.match(/\[.*\]/s);
       if (match) {
         try {
           videos = JSON.parse(match[0]);
           console.log(`✅ Recovered ${videos.length} videos from fallback`);
-        } catch {}
+        } catch (fallbackError) {
+          console.error("⚠️ Fallback regex parse also failed:", fallbackError);
+          videos = [];
+        }
+      } else {
+        console.error("⚠️ No JSON array found in output");
+        videos = [];
       }
     }
   }
@@ -159,7 +168,10 @@ export async function runResearchStage(topic: string): Promise<ResearchData> {
       twitterInsights = JSON.parse(cleanJson);
       console.log(`✅ Twitter items: ${twitterInsights.length}`);
     } catch (err) {
-      console.error("⚠️ Twitter JSON parse failed:", twitterResult.finalOutput);
+      console.error("⚠️ Twitter JSON parse failed:", err);
+      console.error("Raw output:", twitterResult.finalOutput);
+
+      // Attempt fallback regex extraction
       const match = twitterResult.finalOutput.match(/\[.*\]/s);
       if (match) {
         try {
@@ -167,7 +179,13 @@ export async function runResearchStage(topic: string): Promise<ResearchData> {
           console.log(
             `✅ Recovered ${twitterInsights.length} items from fallback`
           );
-        } catch {}
+        } catch (fallbackError) {
+          console.error("⚠️ Fallback regex parse also failed:", fallbackError);
+          twitterInsights = [];
+        }
+      } else {
+        console.error("⚠️ No JSON array found in output");
+        twitterInsights = [];
       }
     }
   }
