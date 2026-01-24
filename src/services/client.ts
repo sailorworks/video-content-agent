@@ -70,14 +70,26 @@ export async function createToolkitSession(
 ) {
   console.log(`🔌 Connecting to tools: ${toolkits.join(", ")}...`);
 
-  const toolkitConfig = toolkits.map((toolkit) =>
-    authConfigId ? { toolkit, authConfigId } : toolkit
-  );
-
   const client = getComposioClient();
-  return await client.experimental.toolRouter.createSession(userId, {
-    toolkits: toolkitConfig,
+
+  // Build authConfigs object if authConfigId is provided
+  // New API uses object format: { toolkit: authConfigId }
+  const authConfigs = authConfigId
+    ? Object.fromEntries(toolkits.map((t) => [t, authConfigId]))
+    : undefined;
+
+  const session = await client.create(userId, {
+    toolkits,
+    ...(authConfigs && { authConfigs }),
   });
+
+  // Return wrapper object for backward compatibility
+  // Old API: session.url → New API: session.mcp.url
+  return {
+    url: session.mcp.url, // For hostedMcpTool serverUrl
+    headers: session.mcp.headers ?? {}, // For authentication (default to empty if undefined)
+    session, // Full session for other methods like authorize()
+  };
 }
 
 /**

@@ -33,7 +33,11 @@ export async function runResearchStage(topic: string): Promise<ResearchData> {
         ]
     `,
     tools: [
-      hostedMcpTool({ serverLabel: "tool_router", serverUrl: ytSession.url }),
+      hostedMcpTool({
+        serverLabel: "tool_router",
+        serverUrl: ytSession.url,
+        headers: ytSession.headers,
+      }),
     ],
     model: "gpt-4o",
   });
@@ -89,21 +93,28 @@ export async function runResearchStage(topic: string): Promise<ResearchData> {
   const trendAgent = new Agent({
     name: "Trend Researcher",
     instructions: `
-      ALWAYS call EXA_SEARCH with this EXACT JSON:
-      {
-        "query": "${topic}",
-        "numResults": 5,
-        "type": "neural",
-        "category": "news",
-        "startPublishedDate": "${dateStr}"
-      }
+      You are a trend researcher. Your ONLY job is to search for news about a SPECIFIC topic.
 
-      After receiving results:
-      - Summarize the top 3 most relevant recent discussions.
-      - Keep the output concise and factual.
+      THE TOPIC IS: "${topic}"
+
+      You MUST call EXA_SEARCH with these EXACT parameters:
+      - query: "${topic}" (DO NOT change this - use this exact string)
+      - numResults: 5
+      - type: "neural"
+      - category: "news"
+      - startPublishedDate: "${dateStr}"
+
+      DO NOT search for generic "AI news" or "latest developments".
+      ONLY search for: "${topic}"
+
+      After receiving results, summarize the top 3 most relevant articles about "${topic}".
     `,
     tools: [
-      hostedMcpTool({ serverLabel: "tool_router", serverUrl: exaSession.url }),
+      hostedMcpTool({
+        serverLabel: "tool_router",
+        serverUrl: exaSession.url,
+        headers: exaSession.headers,
+      }),
     ],
     model: "gpt-4o",
   });
@@ -134,7 +145,7 @@ export async function runResearchStage(topic: string): Promise<ResearchData> {
       {
         "query": "${topic}",
         "result_type": "recent",
-        "limit": 10
+        "limit": 5
       }
 
       CRITICAL OUTPUT INSTRUCTIONS:
@@ -155,6 +166,7 @@ export async function runResearchStage(topic: string): Promise<ResearchData> {
       hostedMcpTool({
         serverLabel: "tool_router",
         serverUrl: twitterSession.url,
+        headers: twitterSession.headers,
       }),
     ],
     model: "gpt-4o",

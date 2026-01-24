@@ -25,7 +25,7 @@
     "vitest": "^4.0.16"
   },
   "dependencies": {
-    "@composio/core": "^0.2.6",
+    "@composio/core": "^0.5.5",
     "@openai/agents": "^0.3.3",
     "dotenv": "^17.2.3",
     "inquirer": "^13.0.2",

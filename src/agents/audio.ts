@@ -36,6 +36,7 @@ export async function runAudioStage(scriptText: string) {
       hostedMcpTool({
         serverLabel: "tool_router",
         serverUrl: voiceSession.url,
+        headers: voiceSession.headers,
       }),
     ],
     model: "gpt-4o",
