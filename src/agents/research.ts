@@ -130,37 +130,76 @@ export async function runResearchStage(topic: string): Promise<ResearchData> {
     ["twitter"],
     process.env.TWITTER_AUTH_CONFIG_ID
   );
+
+  // Extract key terms from the topic for a simpler, more effective search
+  // E.g., "claude code for development and coding" -> "Claude Code"
+  const extractKeyTerms = (fullTopic: string): string => {
+    // Remove common filler words
+    const fillerWords = [
+      "for", "and", "the", "a", "an", "in", "on", "with", "about", 
+      "how", "to", "of", "is", "are", "was", "were", "be", "been",
+      "being", "have", "has", "had", "do", "does", "did", "will",
+      "would", "could", "should", "may", "might", "must", "shall"
+    ];
+    
+    const words = fullTopic.toLowerCase().split(/\s+/);
+    const keyWords = words.filter(word => !fillerWords.includes(word) && word.length > 2);
+    
+    // Take the first 2-3 meaningful words to form the search query
+    const searchTerms = keyWords.slice(0, 3).join(" ");
+    
+    // Capitalize properly for better results
+    return searchTerms || fullTopic;
+  };
+
+  const twitterSearchQuery = extractKeyTerms(topic);
+  
+  // Calculate date 90 days ago for the search filter
+  const twitterDateStr = new Date(Date.now() - 90 * 24 * 60 * 60 * 1000)
+    .toISOString()
+    .split("T")[0];
+
+  console.log(`🔍 Twitter search query: "${twitterSearchQuery}"`);
+
   const twitterAgent = new Agent({
     name: "Twitter Scout",
     instructions: `
-      Search Twitter for posts/threads about "${topic}".
+      You are a Twitter researcher finding VIRAL content.
       
-      REQUIRED FILTERS:
-      - Only include tweets with:
-          • 1000+ likes
-          • 10+ comments
-          • High views/engagement
-
-      REQUIRED SEARCH FORMAT (assume toolkit matches this shape):
-      {
-        "query": "${topic}",
-        "result_type": "recent",
-        "limit": 5
-      }
+      STEP 1 - SEARCH TWITTER:
+      Search for: "${twitterSearchQuery}"
+      
+      Use the Twitter search tool with these parameters:
+      - query: "${twitterSearchQuery}" (use this EXACT query, do NOT modify it)
+      - max_results: 10 (keep data manageable for the agent)
+      - sort_order: "relevancy" (prioritize popular/engaging tweets)
+      
+      STEP 2 - FILTER RESULTS:
+      From the search results, ONLY include tweets that have:
+      - 100+ likes (like_count >= 100)
+      - 5+ comments/replies (reply_count >= 5)
+      - Posted within the last 90 days (after ${twitterDateStr})
+      
+      If no tweets meet these criteria, lower the threshold slightly but prioritize the most engaged tweets.
+      
+      STEP 3 - RETURN TOP 5:
+      Return the TOP 5 most viral tweets based on engagement.
 
       CRITICAL OUTPUT INSTRUCTIONS:
-      - Return ONLY valid JSON.
-      - No markdown. No text.
-      - Schema must be:
+      - Return ONLY valid JSON array.
+      - No markdown formatting. No text before or after.
+      - Schema MUST be exactly:
         [
           {
-            "text": "string",
-            "url": "string",
-            "likes": number,
-            "comments": number,
-            "views": number
+            "text": "tweet content here",
+            "url": "https://twitter.com/user/status/id",
+            "likes": 150,
+            "comments": 10,
+            "views": 5000
           }
         ]
+      
+      If you find tweets, return them. If the API returns tweets that don't meet the engagement criteria, still return the best ones available with their actual metrics.
     `,
     tools: [
       hostedMcpTool({

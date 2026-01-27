@@ -16,7 +16,7 @@ async function main() {
       type: "input",
       name: "topic",
       message: "What topic would you like to generate video content for?",
-      default: "voice agents in 2025",
+      default: "Claude code for development in 2026dfg",
     },
   ]);
   const TOPIC = topic;
