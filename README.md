@@ -113,6 +113,46 @@ The agent will then:
 3. Generate audio from the approved script (~10-20 seconds)
 4. Create the final video (~2-5 minutes depending on HeyGen queue)
 
+5. ## 💻 CLI Usage
+
+The CLI provides a command-line interface for generating viral video content.
+
+### Installation
+
+```bash
+npm install -g video-content-agent
+```
+
+### Quick Start
+
+```bash
+video-content-agent --topic "Your topic here"
+```
+
+### Options
+
+- `--topic <topic>`: The topic for video content generation (required)
+- `--output <path>`: Output directory for the generated video (default: ./output)
+- `--skip-approval`: Skip the interactive script approval step
+- `--dry-run`: Test the pipeline without generating the actual video
+
+### Examples
+
+#### Generate a video with approval:
+```bash
+video-content-agent --topic "AI trends in 2024"
+```
+
+#### Generate a video and save to custom location:
+```bash
+video-content-agent --topic "Web development" --output ./my-videos
+```
+
+#### Skip approval step:
+```bash
+video-content-agent --topic "Gaming news" --skip-approval
+```
+
 
 ## 📁 Project Structure
 
@@ -210,6 +250,74 @@ Add new stages by:
 2. Importing and calling it in `index.ts`
 3. Updating `AgentState` type in `src/state/state.ts`
 
+
+## 💻 CLI Interface
+
+An interactive command-line interface (CLI) for the video-content-agent is now available! Built with **Ink + React**, the CLI provides a user-friendly terminal-based workflow.
+
+### Installation
+
+```bash
+npm install
+```
+
+### Running the CLI
+
+**Development Mode:**
+```bash
+npm run dev
+```
+
+**Production Mode:**
+```bash
+npm run build
+npm start
+```
+
+### Features
+
+- 🎯 **Interactive Input** - Beautiful terminal forms for topic input
+- ⏳ **Progress Indicators** - Real-time spinners during processing
+- 📝 **Script Review** - Formatted script display with feedback collection
+- 🔄 **Full Workflow** - Complete pipeline from research to video production
+- ⚠️ **Error Handling** - Graceful error messages and recovery
+- 🧪 **Mock Implementations** - Test without real API calls
+
+### Workflow States
+
+1. **Input** - Enter your video topic
+2. **Research** - Agent researches trending content
+3. **Generate** - AI generates optimized script
+4. **Review** - Review script and provide feedback
+5. **Voiceover** - Generate voiceover using ElevenLabs
+6. **Video** - Produce final polished video
+7. **Done** - Completion!
+
+### Architecture
+
+- **Framework**: Ink (React renderer for CLIs)
+- **Language**: TypeScript
+- **UI Components**: @inkjs/ui
+- **Styling**: Chalk
+- **State Management**: React Hooks
+
+### Project Structure
+
+```
+src/cli/
+├── app.tsx              # Main Ink app with workflow orchestration
+├── components/
+│   ├── FormInput.tsx    # Interactive input forms
+│   ├── ProgressSpinner.tsx  # Loading indicators
+│   ├── ScriptReview.tsx # Script display and feedback
+│   └── StyledText.tsx   # Formatted text output
+└── workflow.ts          # Workflow logic with mock functions
+```
+
+### Related
+
+- PR #5: Initial CLI implementation using Ink + React
+- Issue #4: Feature proposal for interactive CLI
 ## 🤝 Contributing
 
 Contributions are welcome! Please follow these steps:
